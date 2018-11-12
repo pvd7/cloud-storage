@@ -1,17 +1,17 @@
-<?import javafx.scene.layout.GridPane?>
+<?xml version="1.0" encoding="UTF-8"?>
+
 <?import javafx.scene.layout.VBox?>
 
-<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.layout.HBox?>
-
 <?import javafx.scene.control.ListView?>
-<VBox fx:controller="com.client.Controller"
-      xmlns:fx="http://javafx.com/fxml" alignment="center" stylesheets="styles.css">
-    <TextArea fx:id="textArea" editable="false" VBox.vgrow="ALWAYS"/>
+<?import javafx.scene.layout.HBox?>
+<VBox alignment="CENTER" prefHeight="400.0" prefWidth="400.0"
+      xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.client.controller.Controller"
+      style="-fx-background-color: linear-gradient(#fff 0%, #eee 10%, #ddd 90%, #bbb 100%);" fx:id="rootNode">
     <HBox>
-        <TextField fx:id="textField" HBox.hgrow="ALWAYS" promptText="Введите сообщение..." onAction="#sendMsgAction"/>
-        <Button text="Click Me!!!" onAction="#sendMsgAction"/>
+        <TextField HBox.hgrow="ALWAYS" fx:id="tfFileName" promptText="Укажите имя файла на сервере, который хотите скачать" focusTraversable="false"/>
+        <Button text="Скачать" onAction="#pressOnDownloadBtn" />
     </HBox>
+    <ListView fx:id="filesList" VBox.vgrow="ALWAYS"/>
 </VBox>
