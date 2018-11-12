@@ -24,8 +24,7 @@ public class Server {
             b.group(mainGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ServerInitializer())
-                    .option(ChannelOption.SO_BACKLOG, 128)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true);
+                    .option(ChannelOption.SO_BACKLOG, 128);
             ChannelFuture future = b.bind(PORT).sync();
             future.channel().closeFuture().sync();
         } finally {
