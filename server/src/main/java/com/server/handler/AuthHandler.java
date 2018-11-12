@@ -13,7 +13,7 @@ import io.netty.util.ReferenceCountUtil;
  */
 public class AuthHandler extends ChannelInboundHandlerAdapter {
 
-    private boolean isAuth = false;
+    private boolean isAuth = true;
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
