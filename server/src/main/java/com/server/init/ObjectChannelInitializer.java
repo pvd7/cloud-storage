@@ -1,12 +1,14 @@
-package com.server.handler;
+package com.server.init;
 
+import com.server.handler.AuthHandler;
+import com.server.handler.FileHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 
-public class ServerInitializer extends ChannelInitializer<SocketChannel> {
+public class ObjectChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     final static private int MAX_OBJECT_SIZE = 10 * 1024 * 1024;
 

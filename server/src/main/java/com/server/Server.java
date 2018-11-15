@@ -1,6 +1,6 @@
 package com.server;
 
-import com.server.handler.ServerInitializer;
+import com.server.init.ObjectChannelInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
@@ -23,7 +23,7 @@ public class Server {
             ServerBootstrap b = new ServerBootstrap();
             b.group(mainGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .childHandler(new ServerInitializer())
+                    .childHandler(new ObjectChannelInitializer())
                     .option(ChannelOption.SO_BACKLOG, 128);
             ChannelFuture future = b.bind(PORT).sync();
             future.channel().closeFuture().sync();
