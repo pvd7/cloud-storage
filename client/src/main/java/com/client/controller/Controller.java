@@ -35,9 +35,9 @@ public class Controller implements Initializable {
         Thread t = new Thread(() -> {
             try {
                 while (true) {
-                    AbstractMessage am = Network.readObject();
-                    if (am instanceof FileMessage) {
-                        FileMessage fm = (FileMessage) am;
+                    AbstractMessage obj = Network.readObject();
+                    if (obj instanceof FileMessage) {
+                        FileMessage fm = (FileMessage) obj;
                         Files.write(Paths.get( STORAGE + "/" + fm.getFilename()), fm.getData(), StandardOpenOption.CREATE);
                         refreshLocalFilesList();
                     }
