@@ -4,16 +4,18 @@ import com.common.entity.FileMessage;
 import com.common.entity.FileRequest;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.DefaultFileRegion;
 import io.netty.util.ReferenceCountUtil;
 
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 
 public class FileHandler extends ChannelInboundHandlerAdapter {
 
-    final static String STORAGE = "server_storage";
+    private final static String STORAGE = "server_storage";
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -41,6 +43,16 @@ public class FileHandler extends ChannelInboundHandlerAdapter {
         if (Files.exists(Paths.get(STORAGE + "/" + msg.getFilename()))) {
             FileMessage fm = new FileMessage(Paths.get(STORAGE + "/" + msg.getFilename()));
             ctx.writeAndFlush(fm);
+        }
+    }
+
+    private void chanelFileWrite1(ChannelHandlerContext ctx, FileRequest msg) throws IOException {
+        String path = STORAGE + "/" + msg.getFilename();
+        if (Files.exists(Paths.get(path))) {
+//            FileMessage fm = new FileMessage(Paths.get(path));
+            RandomAccessFile file = new RandomAccessFile(path, "r");
+            ctx.write(new DefaultFileRegion(file.getChannel(), 0, file.length()));
+            ctx.writeAndFlush("\n");
         }
     }
 
