@@ -1,86 +1,75 @@
-/*
- * Copyright 2014 The Netty Project
- *
- * The Netty Project licenses this file to you under the Apache License,
- * version 2.0 (the "License"); you may not use this file except in compliance
- * with the License. You may obtain a copy of the License at:
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package com.file;
 
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.DefaultFileRegion;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class FileServerHandler extends SimpleChannelInboundHandler<String> {
 
-    private final static String STORAGE = "server_storage";
+    private final static String CMD_GET = "GET:";
+    private final static int CMD_GET_LEN = CMD_GET.length();
+
+    private String fileExists(ChannelHandlerContext ctx, String file) {
+        try {
+            for (int i = 0; i < FileServer.PARTS_LENGTH; i++) {
+                if (Files.exists(Paths.get(FileServer.PARTS[i] + file)))
+                    return FileServer.PARTS[i] + file;
+            }
+        } catch (Exception e) {
+            ctx.writeAndFlush("ERR: " + e.getClass().getSimpleName() + ": " + e.getMessage() + '\n');
+            return "";
+        }
+        return "";
+    }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         ctx.writeAndFlush("HELLO: Type the name of the file to retrieve.\n");
     }
 
-    private Path exist(String dir) throws IOException {
-        Files.list(Paths.get(STORAGE)).map(Path::getFileName).forEach(System.out::println);
-        return null;
-    };
-
     @Override
-    public void channelRead0(ChannelHandlerContext ctx, String msg) throws Exception {
-        String storage;
-        Files.list(Paths.get(STORAGE)).map(Path::getFileName).forEach(System.out::println);
-//        o -> {if (Files.exists(o + ))}
+    public void channelRead0(ChannelHandlerContext ctx, String msg) {
+        if (msg.toUpperCase().startsWith(CMD_GET)) {
+            downloadFile(ctx, msg);
+        } else {
+            ctx.writeAndFlush("ERR: command not found.\n");
+        }
+    }
 
-
-        if (Files.exists(Paths.get(STORAGE + "/" + msg))) {
-            RandomAccessFile raf = null;
-            long length = -1;
-            try {
-                raf = new RandomAccessFile(msg, "r");
-                length = raf.length();
-            } catch (Exception e) {
+    private void downloadFile(ChannelHandlerContext ctx, String msg) {
+        String file = msg.substring(CMD_GET_LEN).trim();
+        String path = fileExists(ctx, file);
+        if (path.equals("")) {
+            ctx.writeAndFlush("ERR: file not found: " + file + "\n");
+        } else {
+            try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
+                long len = raf.length();
+                ctx.write("OK: " + len + '\n');
+                ctx.write(new DefaultFileRegion(raf.getChannel(), 0, len));
+//                ctx.write(new ChunkedFile(raf));
+                ctx.writeAndFlush("\n");
+            } catch (IOException e) {
                 ctx.writeAndFlush("ERR: " + e.getClass().getSimpleName() + ": " + e.getMessage() + '\n');
-                return;
-            } finally {
-                if (length < 0 && raf != null) {
-                    raf.close();
-                }
             }
-
-            ctx.write("OK: " + raf.length() + '\n');
-            ctx.write(new DefaultFileRegion(raf.getChannel(), 0, length));
-            ctx.writeAndFlush("\n");
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
-
         if (ctx.channel().isActive()) {
             ctx.writeAndFlush("ERR: " +
                     cause.getClass().getSimpleName() + ": " +
                     cause.getMessage() + '\n').addListener(ChannelFutureListener.CLOSE);
         }
     }
+
 }
 

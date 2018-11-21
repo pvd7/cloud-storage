@@ -14,29 +14,26 @@ import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.CharsetUtil;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class FileServer {
+
+    // основная директоррия с файлами
+    public static final String STORAGE = "server_storage";
+    // список частей хранилища
+    public static final String[] PARTS = {STORAGE + "/part01/", STORAGE + "/part02/"};
+    public static final int PARTS_LENGTH = PARTS.length;
+//    public static final String[] PARTS = System.getProperty("parts").split(",");
 
     static final int PORT = Integer.parseInt(System.getProperty("port", "8023"));
 
     public static void main(String[] args) throws Exception {
-        System.out.println(Files.getFileStore(Paths.get("server_storage")));
-
-        Files.list()
-
-
-        String a = "";
-        Files.list(Paths.get("server_storage")).forEach(path -> {
-            if (Files.exists(Paths.get(path + "1234" + a))) {
-                a = "23432";
-            }
-        });
-
-
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try {
@@ -63,4 +60,5 @@ public final class FileServer {
             workerGroup.shutdownGracefully();
         }
     }
+
 }

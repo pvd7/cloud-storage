@@ -9,7 +9,6 @@ import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
@@ -36,10 +35,8 @@ public final class FileClient {
                  }
              });
 
-            // Start the connection attempt.
             Channel ch = b.connect(HOST, PORT).sync().channel();
 
-            // Read commands from the stdin.
             ChannelFuture lastWriteFuture = null;
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
             for (;;) {
@@ -47,7 +44,6 @@ public final class FileClient {
                 if (line == null) {
                     break;
                 }
-
                 // Sends the received line to the server.
                 lastWriteFuture = ch.writeAndFlush(line + "\r\n");
 
