@@ -13,20 +13,20 @@ public class FileClientHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg) {
-        i++;
-        count += msg.length();
-        System.out.printf("[%d, %s/%s] ", i, count, len);
-        System.out.println(msg);
+//        i++;
+//        count += msg.length();
+//        System.out.printf("[%d, %s/%s] ", i, count, len);
+        System.err.println(msg);
 
-        if (msg.startsWith("OK:")) {
-            i = 1;
-            len = Integer.parseInt(msg.substring(3).trim());
-            count = 0;
-            state = "OK";
-            System.out.println("file " + len);
-        } else {
-
-        }
+//        if (msg.startsWith("OK:")) {
+//            i = 1;
+//            len = Integer.parseInt(msg.substring(3).trim());
+//            count = 0;
+//            state = "OK";
+//            System.out.println("file " + len);
+//        } else {
+//
+//        }
 
         if (!(ctx.channel().isOpen() && ctx.channel().isActive())) {
             System.err.println("ctx.channel().isOpen(): " + ctx.channel().isOpen()
