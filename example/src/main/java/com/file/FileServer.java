@@ -13,15 +13,6 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.CharsetUtil;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-
 public final class FileServer {
 
     // основная директоррия с файлами
@@ -46,11 +37,11 @@ public final class FileServer {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
                             ch.pipeline().addLast(
-                                    new StringEncoder(CharsetUtil.UTF_8),
-                                    new LineBasedFrameDecoder(8192),
-                                    new StringDecoder(CharsetUtil.UTF_8),
-                                    new ChunkedWriteHandler(),
-                                    new FileServerHandler());
+                                    new StringEncoder(CharsetUtil.UTF_8), // outbound
+                                    new LineBasedFrameDecoder(8192), // inbound
+                                    new StringDecoder(CharsetUtil.UTF_8), // inbound
+                                    new ChunkedWriteHandler(), // inbound & outbound
+                                    new FileServerHandler()); // inbound
                         }
                     });
             ChannelFuture f = b.bind(PORT).sync();

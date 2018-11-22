@@ -5,9 +5,12 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.DelimiterBasedFrameDecoder;
+import io.netty.handler.codec.Delimiters;
 import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.CharsetUtil;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -27,10 +30,11 @@ public final class FileClient {
                  @Override
                  protected void initChannel(SocketChannel ch) throws Exception {
                      ch.pipeline().addLast(
-                             new StringEncoder(CharsetUtil.UTF_8),
-                             new LineBasedFrameDecoder(8192),
-                             new StringDecoder(CharsetUtil.UTF_8),
-                             new FileClientHandler()
+                             new StringEncoder(CharsetUtil.UTF_8), // outbound
+                             new LineBasedFrameDecoder(8192), // inbound
+                             new StringDecoder(CharsetUtil.UTF_8), // inbound
+                             new ChunkedWriteHandler(), // inbound & outbound
+                             new FileClientHandler() // inbound
                      );
                  }
              });
