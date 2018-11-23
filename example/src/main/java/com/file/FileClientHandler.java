@@ -2,31 +2,38 @@ package com.file;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.util.CharsetUtil;
+
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.UUID;
 
 public class FileClientHandler extends SimpleChannelInboundHandler<String> {
 
-    private int i = 0;
-    long len = 0;
-    long count = 0;
-    String state = "";
+//    int i = 0;
+
+    private OutputStream outFile = null;
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, String msg) {
-//        i++;
-//        count += msg.length();
-//        System.out.printf("[%d, %s/%s] ", i, count, len);
-        System.err.println(msg);
+    protected void channelRead0(ChannelHandlerContext ctx, String msg) throws IOException {
 
-//        if (msg.startsWith("OK:")) {
-//            i = 1;
-//            len = Integer.parseInt(msg.substring(3).trim());
-//            count = 0;
-//            state = "OK";
-//            System.out.println("file " + len);
-//        } else {
-//
-//        }
+
+        if (outFile != null) {
+            outFile.write(msg.getBytes(CharsetUtil.UTF_8));
+        } else {
+            if (msg.startsWith("OK:")) {
+                outFile = Files.newOutputStream(Paths.get(FileClient.TEMP_DIR + "/" + UUID.randomUUID()), StandardOpenOption.CREATE);
+                System.err.println("create file");
+//                i = 0;
+            } else if (msg.startsWith("HELLO:")) {
+                System.err.println(msg);
+            }
+        }
+
+//        System.err.println("[" + i++ + "] " + msg);
+//        System.err.println(msg);
 
         if (!(ctx.channel().isOpen() && ctx.channel().isActive())) {
             System.err.println("ctx.channel().isOpen(): " + ctx.channel().isOpen()
@@ -39,4 +46,17 @@ public class FileClientHandler extends SimpleChannelInboundHandler<String> {
         cause.printStackTrace();
         ctx.close();
     }
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        System.err.println("channelReadComplete");
+        if (outFile != null) {
+            outFile.close();
+            outFile = null;
+            System.err.println("close file");
+        }
+    }
+
+
+
 }

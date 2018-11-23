@@ -3,6 +3,7 @@ package com.file;
 import com.file.util.FileUtil;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.DefaultFileRegion;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.stream.ChunkedFile;
 import java.io.IOException;
@@ -35,7 +36,7 @@ public class FileServerHandler extends SimpleChannelInboundHandler<String> {
                 long len = raf.length();
                 ctx.write("OK: " + len + '\n');
 //                ctx.write(new DefaultFileRegion(raf.getChannel(), 0, len));
-                ctx.write(new ChunkedFile(raf));
+                ctx.write(new ChunkedFile(raf, 1024 * 1024 * 1024));
                 ctx.writeAndFlush("\n");
             }
         } catch (IOException e) {

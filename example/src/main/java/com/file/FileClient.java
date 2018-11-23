@@ -20,6 +20,8 @@ public final class FileClient {
     static final String HOST = System.getProperty("host", "127.0.0.1");
     static final int PORT = Integer.parseInt(System.getProperty("port", "8023"));
 
+    static final String TEMP_DIR = "client_storage/temp";
+
     public static void main(String[] args) throws Exception {
         EventLoopGroup group = new NioEventLoopGroup();
         try {
@@ -49,6 +51,11 @@ public final class FileClient {
                     break;
                 }
                 // Sends the received line to the server.
+                if (!(ch.isOpen() && ch.isActive())) {
+                    System.err.println("ch.isOpen(): " + ch.isOpen()
+                            + ", ch.isActive(): " + ch.isActive());
+                }
+
                 lastWriteFuture = ch.writeAndFlush(line + "\r\n");
 
                 // If user typed the 'bye' command, wait until the server closes
