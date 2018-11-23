@@ -7,10 +7,12 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
 
 public class Server {
 
-    final static private int PORT = 8189;
+    final static private int PORT = 8181;
 
     public Server() {
     }
@@ -23,8 +25,9 @@ public class Server {
             ServerBootstrap b = new ServerBootstrap();
             b.group(mainGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .childHandler(new ObjectChannelInitializer())
-                    .option(ChannelOption.SO_BACKLOG, 128);
+                    .option(ChannelOption.SO_BACKLOG, 128)
+                    .handler(new LoggingHandler(LogLevel.INFO))
+                    .childHandler(new ObjectChannelInitializer());
             ChannelFuture future = b.bind(PORT).sync();
             future.channel().closeFuture().sync();
         } finally {

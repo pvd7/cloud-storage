@@ -4,7 +4,6 @@ package com.client.net;
 import com.common.entity.AbstractMessage;
 import io.netty.handler.codec.serialization.ObjectDecoderInputStream;
 import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
-
 import java.io.IOException;
 import java.net.Socket;
 

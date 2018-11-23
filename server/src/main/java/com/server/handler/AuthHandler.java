@@ -1,6 +1,7 @@
 package com.server.handler;
 
 import com.common.entity.AuthRequest;
+import com.common.entity.HelloResponse;
 import com.common.entity.UnauthorizedResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -14,6 +15,11 @@ import io.netty.util.ReferenceCountUtil;
 public class AuthHandler extends ChannelInboundHandlerAdapter {
 
     private boolean isAuth = true;
+
+//    @Override
+//    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+//        ctx.writeAndFlush(new HelloResponse());
+//    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {

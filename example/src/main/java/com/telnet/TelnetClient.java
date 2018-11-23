@@ -67,6 +67,8 @@ public final class TelnetClient {
                 }
 
                 // Sends the received line to the server.
+                System.out.println("ch.isActive(): " + ch.isActive());
+                System.out.println("ch.isOpen(): " + ch.isOpen());
                 lastWriteFuture = ch.writeAndFlush(line + "\r\n");
 
                 // If user typed the 'bye' command, wait until the server closes
