@@ -12,7 +12,14 @@ import io.netty.handler.logging.LoggingHandler;
 
 public class Server {
 
-    final static private int PORT = 8181;
+    final static private int PORT = 8023;
+
+    // основная директоррия с файлами
+    public static final String STORAGE = "server_storage";
+    // список частей хранилища
+//    public static final String[] PARTS = {STORAGE + "/part01/", STORAGE + "/part02/"};
+    public static final String[] PARTS = {"server_storage/part01/", "server_storage/part02/", "D:/Install/"};
+
 
     public Server() {
     }

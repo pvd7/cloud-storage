@@ -2,6 +2,8 @@ package com.server.handler;
 
 import com.common.entity.FileMessage;
 import com.common.entity.FileRequest;
+import com.server.Server;
+import com.server.util.FileUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.DefaultFileRegion;
@@ -11,11 +13,15 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 
 public class FileHandler extends ChannelInboundHandlerAdapter {
 
     private final static String STORAGE = "server_storage";
+    private static final int CHUNK_FILE_SIZE = 8 * 1024;
+
+    private FileMessage fileMessage = new FileMessage();
+
+    private byte[] buf = new byte[CHUNK_FILE_SIZE];
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -26,25 +32,39 @@ public class FileHandler extends ChannelInboundHandlerAdapter {
                 chanelFileWrite(ctx, (FileRequest) msg);
             } else if (msg instanceof FileMessage) {
                 channelFileRead((FileMessage) msg);
+            } else {
+                System.err.println(msg);
             }
         } finally {
             ReferenceCountUtil.release(msg);
         }
-
     }
 
-    /**
-     * Пишет {@link FileMessage} в канал
-     *
-     * @param ctx контекст
-     * @param msg входящее сообщение {@link FileRequest}
-     * @throws IOException исключение
-     */
     private void chanelFileWrite(ChannelHandlerContext ctx, FileRequest msg) throws IOException {
-        if (Files.exists(Paths.get(STORAGE + "/" + msg.getFilename()))) {
-            FileMessage fm = new FileMessage(Paths.get(STORAGE + "/" + msg.getFilename()));
-            ctx.writeAndFlush(fm);
+        System.out.println(msg.getFilename());
+        try {
+            String path = FileUtil.find(Server.PARTS, msg.getFilename());
+            fileMessage.setFilename(msg.getFilename());
+            try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
+                fileMessage.setLength(raf.length());
+                int read;
+                while ((read = raf.read(buf)) > 0) {
+                    fileMessage.setRead(read);
+                    fileMessage.setData(buf);
+                    ctx.writeAndFlush(fileMessage);
+                    ctx.flush();
+                }
+            }
+//            ctx.flush();
+        } catch (IOException e) {
+            ctx.writeAndFlush(e);
         }
+
+//        String path = FileUtil.find(Server.PARTS, msg.getFilename());
+//        if (Files.exists(Paths.get(STORAGE + "/" + msg.getFilename()))) {
+//            FileMessage fm = new FileMessage(Paths.get(STORAGE + "/" + msg.getFilename()));
+//            ctx.writeAndFlush(fm);
+//        }
     }
 
     private void chanelFileWrite1(ChannelHandlerContext ctx, FileRequest msg) throws IOException {
@@ -64,7 +84,7 @@ public class FileHandler extends ChannelInboundHandlerAdapter {
      * @throws IOException исключение
      */
     private void channelFileRead(FileMessage msg) throws IOException {
-        Files.write(Paths.get(STORAGE + "/" + msg.getFilename()), msg.getData(), StandardOpenOption.CREATE);
+//        Files.write(Paths.get(STORAGE + "/" + msg.getFilename()), msg.getData(), StandardOpenOption.CREATE);
     }
 
     @Override

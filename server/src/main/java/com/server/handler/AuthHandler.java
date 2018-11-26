@@ -1,7 +1,7 @@
 package com.server.handler;
 
 import com.common.entity.AuthRequest;
-import com.common.entity.HelloResponse;
+import com.common.entity.AuthorizedResponse;
 import com.common.entity.UnauthorizedResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -14,12 +14,10 @@ import io.netty.util.ReferenceCountUtil;
  */
 public class AuthHandler extends ChannelInboundHandlerAdapter {
 
-    private boolean isAuth = true;
+    private boolean isAuthorized = true;
 
-//    @Override
-//    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-//        ctx.writeAndFlush(new HelloResponse());
-//    }
+    private AuthorizedResponse authorizedResponse = new AuthorizedResponse();
+    private UnauthorizedResponse unauthorizedResponse = new UnauthorizedResponse();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -27,12 +25,13 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
             if (msg == null) return;
 
             if (msg instanceof AuthRequest) {
-                isAuth = ((AuthRequest) msg).isValid("");
-                if (!isAuth) ctx.writeAndFlush(new UnauthorizedResponse());
-            } else if (isAuth)
-                ctx.fireChannelRead(msg);
-            else
-                ctx.writeAndFlush(new UnauthorizedResponse());
+                isAuthorized = ((AuthRequest) msg).isValid("");
+                if (isAuthorized) ctx.writeAndFlush(authorizedResponse);
+                else ctx.writeAndFlush(unauthorizedResponse);
+            } else {
+                if (isAuthorized) ctx.fireChannelRead(msg);
+                else ctx.writeAndFlush(unauthorizedResponse);
+            }
         } finally {
             ReferenceCountUtil.release(msg);
         }

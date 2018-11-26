@@ -1,7 +1,5 @@
-package com.server.init;
+package com.client;
 
-import com.server.handler.AuthHandler;
-import com.server.handler.FileHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
@@ -19,8 +17,8 @@ public class ObjectChannelInitializer extends ChannelInitializer<SocketChannel> 
                 new ObjectDecoder(MAX_OBJECT_SIZE, ClassResolvers.cacheDisabled(null)),
                 new ObjectEncoder(),
                 new ChunkedWriteHandler(),
-                new AuthHandler(),
-                new FileHandler()
+//                new AuthHandler(),
+                new MainHandler()
         );
     }
 
