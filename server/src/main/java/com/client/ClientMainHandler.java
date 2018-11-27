@@ -7,11 +7,13 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class ClientMainHandler extends ChannelInboundHandlerAdapter {
 
-    private final static String STORAGE = "server_storage";
+    private final static String STORAGE = "client_storage";
+    public static final String STORAGE_TMP = "client_storage/tmp/";
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -43,9 +45,11 @@ public class ClientMainHandler extends ChannelInboundHandlerAdapter {
         System.out.println(msg);
     }
 
-    private void fileMessage(FileMessage msg) {
+    private void fileMessage(FileMessage msg) throws IOException {
+        try (FileOutputStream file = new FileOutputStream(STORAGE_TMP + msg.getFilename() + ".part" + msg.getPart())) {
+            file.write(msg.getData(), 0, msg.getRead());
+        };
         System.out.println(msg);
-        System.out.println(new String(msg.getData()));
     }
 
     @Override

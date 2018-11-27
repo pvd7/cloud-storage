@@ -1,6 +1,5 @@
 package com.client;
 
-import com.common.Config;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
@@ -13,9 +12,9 @@ public class ObjectChannelInitializer extends ChannelInitializer<SocketChannel> 
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
         ch.pipeline().addLast(
-                new ObjectDecoder(Config.MAX_OBJECT_SIZE, ClassResolvers.cacheDisabled(null)),
+                new ObjectDecoder(10 * 1024 * 1024, ClassResolvers.cacheDisabled(null)),
                 new ObjectEncoder(),
-//                new ChunkedWriteHandler(),
+                new ChunkedWriteHandler(),
                 new ClientMainHandler()
         );
     }

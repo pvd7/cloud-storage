@@ -9,6 +9,8 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
+import java.nio.charset.StandardCharsets;
+
 public class Server {
 
     final static private int PORT = 8023;
@@ -19,9 +21,6 @@ public class Server {
 //    public static final String[] PARTS = {STORAGE + "/part01/", STORAGE + "/part02/"};
     public static final String[] PARTS = {"server_storage/part01/", "server_storage/part02/", "D:/Install/"};
 
-
-    public Server() {
-    }
 
     public void run() throws Exception {
         EventLoopGroup mainGroup = new NioEventLoopGroup();
