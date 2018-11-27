@@ -1,13 +1,10 @@
-package com.server.handler;
+package com.server;
 
 import com.common.entity.FileMessage;
 import com.common.entity.FileRequest;
 import com.server.Server;
 import com.server.util.FileUtil;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.DefaultFileRegion;
+import io.netty.channel.*;
 import io.netty.util.ReferenceCountUtil;
 
 import java.io.IOException;
@@ -15,10 +12,10 @@ import java.io.RandomAccessFile;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
-public class FileHandler extends ChannelInboundHandlerAdapter {
+public class ServerMainHandler extends ChannelInboundHandlerAdapter {
 
     private final static String STORAGE = "server_storage";
-    private static final int CHUNK_FILE_SIZE = 8 * 1024;
+    private static final int CHUNK_FILE_SIZE = 256;
 
     private FileMessage fileMessage = new FileMessage();
 
@@ -47,16 +44,40 @@ public class FileHandler extends ChannelInboundHandlerAdapter {
             String path = FileUtil.find(Server.PARTS, msg.getFilename());
             fileMessage.setFilename(msg.getFilename());
             try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
+                int part = 0;
                 fileMessage.setLength(raf.length());
+                fileMessage.setTotalRead(0);
                 int read;
+                ChannelFuture future = null;
                 while ((read = raf.read(buf)) > 0) {
+//                    fileMessage = new FileMessage();
+//                    fileMessage.setLength(raf.length());
                     fileMessage.setRead(read);
                     fileMessage.setData(buf);
-                    ctx.writeAndFlush(fileMessage);
+                    fileMessage.setPart(part++);
+                    fileMessage.setTotalRead(fileMessage.getTotalRead() + read);
+                    future = ctx.writeAndFlush(fileMessage);
+                    System.out.println("isDone: " + future.isDone());
+                    System.out.println("isSuccess: " + future.isSuccess());
+                    System.out.println("getTotalRead: " + fileMessage.getTotalRead());
+                    System.out.println("getRead: " + fileMessage.getRead());
+
+//                    if (!future.isSuccess()) {
+//                        Throwable throwable = future.cause();
+//                        throwable.printStackTrace();
+//                        break;
+//                    }
+
+//                    while (!future.isDone()) {  };
+
                 }
+//                ctx.flush();
+                System.out.println("isDone: " + future.isDone());
+                System.out.println("isSuccess: " + future.isSuccess());
+                System.out.println("getTotalRead: " + fileMessage.getTotalRead());
             }
-//            ctx.flush();
         } catch (IOException e) {
+            e.printStackTrace();
             ctx.writeAndFlush(e);
         }
     }

@@ -1,5 +1,7 @@
 package com.common.entity;
 
+import java.util.Arrays;
+
 public class FileMessage extends AbstractMessage {
 
     private String filename;
@@ -8,7 +10,19 @@ public class FileMessage extends AbstractMessage {
     private int read;
     private byte[] data;
     private int totalRead;
+    private int part;
 
+    @Override
+    public String toString() {
+        return "FileMessage{" +
+                "filename='" + filename + '\'' +
+                ", length=" + length +
+                ", read=" + read +
+                ", totalRead=" + totalRead +
+                ", part=" + part +
+                ", data=" + Arrays.toString(data) +
+                '}';
+    }
 
     public String getFilename() {
         return filename;
@@ -56,5 +70,13 @@ public class FileMessage extends AbstractMessage {
 
     public void setTotalRead(int totalRead) {
         this.totalRead = totalRead;
+    }
+
+    public int getPart() {
+        return part;
+    }
+
+    public void setPart(int part) {
+        this.part = part;
     }
 }

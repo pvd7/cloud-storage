@@ -9,7 +9,7 @@ import io.netty.util.ReferenceCountUtil;
 
 import java.nio.charset.StandardCharsets;
 
-public class MainHandler extends ChannelInboundHandlerAdapter {
+public class ClientMainHandler extends ChannelInboundHandlerAdapter {
 
     private final static String STORAGE = "server_storage";
 
@@ -44,17 +44,13 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void fileMessage(FileMessage msg) {
-        System.out.printf("%s: %d of %d\n", msg.getFilename(), msg.getRead(), msg.getLength());
-        System.out.println(new String(msg.getData(), 0, msg.getRead(), StandardCharsets.UTF_8));
-    }
-
-    @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        ctx.flush();
+        System.out.println(msg);
+        System.out.println(new String(msg.getData()));
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
         ctx.close();
     }
 
