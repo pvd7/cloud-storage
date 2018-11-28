@@ -1,0 +1,10 @@
+Добрый день.
+(исходники: https://github.com/pvd7/cloud-storage.git)
+Не получилось победить передачу файла от севера к клиенту (example: com.file)
+FileServer сделан на основе примера из Netty (https://github.com/netty/netty/tree/4.1/example/src/main/java/io/netty/example/file)
+При отправке большого файла оправляет только первые ~1.5мб b все.
+При отправке файла с длинной строкой (команда: get:111.txt) кидает ошибку: io.netty.handler.codec.TooLongFrameException: frame length (263402) exceeds the allowed maximum (8192)
+Видимо, это плохая идея передавать файл строками в Netty :(
+И есть подозрения, что из-за каких нибудь волшебных символов в строке передача по сети будет вылетать с ошибкой.
+Гляньте код, может, что то упустил.
+

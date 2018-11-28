@@ -2,18 +2,18 @@ package com.client;
 
 import com.common.entity.AuthorizedResponse;
 import com.common.entity.FileMessage;
+import com.common.entity.FileRequest;
 import com.common.entity.UnauthorizedResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 
 public class ClientMainHandler extends ChannelInboundHandlerAdapter {
 
     private final static String STORAGE = "client_storage";
-    public static final String STORAGE_TMP = "client_storage/tmp/";
+    public static final String STORAGE_TEMP = "client_storage/temp/";
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -46,16 +46,25 @@ public class ClientMainHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void fileMessage(FileMessage msg) throws IOException {
-        try (FileOutputStream file = new FileOutputStream(STORAGE_TMP + msg.getFilename() + ".part" + msg.getPart())) {
+        try (FileOutputStream file = new FileOutputStream(STORAGE_TEMP + msg.getFilename(), true)) {
             file.write(msg.getData(), 0, msg.getRead());
         };
         System.out.println(msg);
+//        try (FileOutputStream file = new FileOutputStream(STORAGE_TEMP + msg.getFilename() + ".part" + msg.getPart(), true)) {
+//            file.write(msg.getData(), 0, msg.getRead());
+//        };
+
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
         ctx.close();
+    }
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) {
+        ctx.flush();
     }
 
 }

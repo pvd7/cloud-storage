@@ -4,7 +4,9 @@ import com.common.entity.FileMessage;
 import com.common.entity.FileRequest;
 import com.server.util.FileUtil;
 import io.netty.channel.*;
+import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.ReferenceCountUtil;
+
 import java.io.IOException;
 import java.io.RandomAccessFile;
 
@@ -13,7 +15,7 @@ public class ServerMainHandler extends ChannelInboundHandlerAdapter {
     private final static String STORAGE = "server_storage";
     private static final int CHUNK_FILE_SIZE = 8 * 1024;
 
-    private FileMessage fileMessage = new FileMessage();
+    private FileMessage fileMsg = new FileMessage();
 
     private byte[] buf = new byte[CHUNK_FILE_SIZE];
 
@@ -38,36 +40,43 @@ public class ServerMainHandler extends ChannelInboundHandlerAdapter {
         System.out.println(msg.getFilename());
         try {
             String path = FileUtil.find(Server.PARTS, msg.getFilename());
-            fileMessage.setFilename(msg.getFilename());
+            fileMsg.setFilename(msg.getFilename());
             try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
-                fileMessage.setLength(raf.length());
-                fileMessage.setTotalRead(0);
+                fileMsg.setLength(raf.length());
+                fileMsg.setTotalRead(0);
                 int read;
                 int part = 0;
                 ChannelFuture future = null;
                 while ((read = raf.read(buf)) > 0) {
-                    fileMessage.setRead(read);
-                    fileMessage.setData(buf);
-                    fileMessage.setPart(part++);
-                    fileMessage.setTotalRead(fileMessage.getTotalRead() + read);
+                    fileMsg.setRead(read);
+                    fileMsg.setData(buf);
+                    fileMsg.setPart(part++);
+                    fileMsg.setTotalRead(fileMsg.getTotalRead() + read);
 
-                    future = ctx.writeAndFlush(fileMessage);
-
-                    System.out.println("isDone: " + future.isDone());
-                    System.out.println("isSuccess: " + future.isSuccess());
-                    System.out.println("getTotalRead: " + fileMessage.getTotalRead());
-                    System.out.println("getRead: " + fileMessage.getRead());
-
-//                    if (!future.isSuccess()) {
-//                        Throwable throwable = future.cause();
-//                        throwable.printStackTrace();
-//                        break;
-//                    }
-
-//                    while (!future.isDone()) {  };
-
+                    future = ctx.writeAndFlush(fileMsg);
+                    if (!future.isSuccess()) {
+//                        System.out.println(future);
+//                        System.out.println("isDone: " + future.isDone());
+//                        System.out.println("isSuccess: " + future.isSuccess());
+//                        System.out.println(fileMsg);
+//                        Thread.sleep(10000);
+                    }
                 }
-//                ctx.flush();
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            ctx.writeAndFlush(e);
+        }
+    }
+
+    private void chanelFileWrite2(ChannelHandlerContext ctx, FileRequest msg) throws IOException {
+        System.out.println(msg.getFilename());
+        try {
+            String path = FileUtil.find(Server.PARTS, msg.getFilename());
+            try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
+                ctx.writeAndFlush(new ChunkedFile(raf, CHUNK_FILE_SIZE));
             }
         } catch (IOException e) {
             e.printStackTrace();
