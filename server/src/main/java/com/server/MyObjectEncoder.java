@@ -13,7 +13,7 @@ public class MyObjectEncoder extends ObjectEncoder {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Serializable msg, ByteBuf out) throws Exception {
-        System.out.println(msg);
+//        System.out.println(msg);
 //        System.out.println(out.getBytes(0, b));
 //        System.out.println(b);
         super.encode(ctx, msg, out);
@@ -21,7 +21,7 @@ public class MyObjectEncoder extends ObjectEncoder {
 
     @Override
     protected ByteBuf allocateBuffer(ChannelHandlerContext ctx, Serializable msg, boolean preferDirect) throws Exception {
-//        System.out.println(msg);
+//        System.out.println(this.getClass().getName() + ": " + msg);
         return super.allocateBuffer(ctx, msg, preferDirect);
     }
 

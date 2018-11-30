@@ -50,10 +50,6 @@ public class ClientMainHandler extends ChannelInboundHandlerAdapter {
             file.write(msg.getData(), 0, msg.getRead());
         };
         System.out.println(msg);
-//        try (FileOutputStream file = new FileOutputStream(STORAGE_TEMP + msg.getFilename() + ".part" + msg.getPart(), true)) {
-//            file.write(msg.getData(), 0, msg.getRead());
-//        };
-
     }
 
     @Override

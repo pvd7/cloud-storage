@@ -25,7 +25,7 @@ public class ServerMainHandler extends ChannelInboundHandlerAdapter {
             if (msg == null) return;
 
             if (msg instanceof FileRequest) {
-                chanelFileWrite(ctx, (FileRequest) msg);
+                chanelFileWrite2(ctx, (FileRequest) msg);
             } else if (msg instanceof FileMessage) {
                 channelFileRead((FileMessage) msg);
             } else {
@@ -54,7 +54,9 @@ public class ServerMainHandler extends ChannelInboundHandlerAdapter {
                     fileMsg.setTotalRead(fileMsg.getTotalRead() + read);
 
                     future = ctx.writeAndFlush(fileMsg);
+//                    System.out.println("isDone: " + future.isDone());
                     if (!future.isSuccess()) {
+//                        System.out.println(future.getNow());
 //                        System.out.println(future);
 //                        System.out.println("isDone: " + future.isDone());
 //                        System.out.println("isSuccess: " + future.isSuccess());
@@ -76,7 +78,8 @@ public class ServerMainHandler extends ChannelInboundHandlerAdapter {
         try {
             String path = FileUtil.find(Server.PARTS, msg.getFilename());
             try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
-                ctx.writeAndFlush(new ChunkedFile(raf, CHUNK_FILE_SIZE));
+//                ctx.writeAndFlush(new ChunkedFile(raf, CHUNK_FILE_SIZE));
+                ctx.writeAndFlush(new DefaultFileRegion(raf.getChannel(), 0, raf.length()));
             }
         } catch (IOException e) {
             e.printStackTrace();
