@@ -2,7 +2,6 @@ package com.client;
 
 import com.common.entity.AuthorizedResponse;
 import com.common.entity.FileMessage;
-import com.common.entity.FileRequest;
 import com.common.entity.UnauthorizedResponse;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -46,7 +45,7 @@ public class ClientMainHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void fileMessage(FileMessage msg) throws IOException {
-        try (FileOutputStream file = new FileOutputStream(STORAGE_TEMP + msg.getFilename(), true)) {
+        try (FileOutputStream file = new FileOutputStream(STORAGE_TEMP + msg.getId(), true)) {
             file.write(msg.getData(), 0, msg.getRead());
         };
         System.out.println(msg);

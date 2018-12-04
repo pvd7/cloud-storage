@@ -1,15 +1,19 @@
 package com.common.entity;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class FileRequest extends AbstractMessage {
 
-    private String filename;
+    private String id; // ID файла
+    private int offset; // смещение
+//    private int length; // количество байт
 
-    public FileRequest(String filename) {
-        this.filename = filename;
-    }
-
-    public String getFilename() {
-        return filename;
+    public FileRequest(String id, int offset) {
+        this.id = id;
+        this.offset = offset;
     }
 
 }

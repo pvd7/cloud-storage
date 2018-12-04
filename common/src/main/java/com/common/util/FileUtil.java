@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 public class FileUtil {
 
     public static String exists(String[] paths, String file) throws FileNotFoundException {
-        if ("".equals(file)) throw new FileNotFoundException("the filename is empty");
+        if ("".equals(file)) throw new FileNotFoundException("the id is empty");
 
         int len = paths.length;
         for (int i = 0; i < len; i++) {
@@ -15,7 +15,7 @@ public class FileUtil {
                 return paths[i] + file;
         }
 
-        throw new FileNotFoundException("the filename is empty");
+        throw new FileNotFoundException("the id is empty");
     }
 
 }

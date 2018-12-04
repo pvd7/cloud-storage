@@ -38,7 +38,7 @@ public class Controller implements Initializable {
                     AbstractMessage obj = Network.readObject();
                     if (obj instanceof FileMessage) {
                         FileMessage fm = (FileMessage) obj;
-                        Files.write(Paths.get( STORAGE + "/" + fm.getFilename()), fm.getData(), StandardOpenOption.CREATE);
+                        Files.write(Paths.get( STORAGE + "/" + fm.getId()), fm.getData(), StandardOpenOption.CREATE);
                         refreshLocalFilesList();
                     }
                 }

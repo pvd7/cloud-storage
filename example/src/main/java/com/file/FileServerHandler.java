@@ -16,7 +16,7 @@ public class FileServerHandler extends SimpleChannelInboundHandler<String> {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
-        ctx.writeAndFlush("HELLO: Type the name of the file to retrieve (please enter: get:<filename>).\n");
+        ctx.writeAndFlush("HELLO: Type the name of the file to retrieve (please enter: get:<id>).\n");
 
     }
 

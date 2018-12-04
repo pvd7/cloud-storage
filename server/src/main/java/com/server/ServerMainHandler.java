@@ -3,21 +3,22 @@ package com.server;
 import com.common.entity.FileMessage;
 import com.common.entity.FileRequest;
 import com.server.util.FileUtil;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
-import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.ReferenceCountUtil;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 
 public class ServerMainHandler extends ChannelInboundHandlerAdapter {
 
-    private final static String STORAGE = "server_storage";
-    private static final int CHUNK_FILE_SIZE = 8 * 1024;
+    private static final String STORAGE = "server_storage";
+    private static final int MAX_CHUNK_SIZE = 8 * 1024;
 
     private FileMessage fileMsg = new FileMessage();
 
-    private byte[] buf = new byte[CHUNK_FILE_SIZE];
+    private byte[] buf = new byte[MAX_CHUNK_SIZE];
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -25,7 +26,7 @@ public class ServerMainHandler extends ChannelInboundHandlerAdapter {
             if (msg == null) return;
 
             if (msg instanceof FileRequest) {
-                chanelFileWrite2(ctx, (FileRequest) msg);
+                chanelFileWrite(ctx, (FileRequest) msg);
             } else if (msg instanceof FileMessage) {
                 channelFileRead((FileMessage) msg);
             } else {
@@ -37,35 +38,17 @@ public class ServerMainHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void chanelFileWrite(ChannelHandlerContext ctx, FileRequest msg) throws IOException {
-        System.out.println(msg.getFilename());
+        System.out.println(msg.getId());
         try {
-            String path = FileUtil.find(Server.PARTS, msg.getFilename());
-            fileMsg.setFilename(msg.getFilename());
+            String path = FileUtil.find(Server.PARTS, msg.getId());
             try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
+                fileMsg.setId(msg.getId());
                 fileMsg.setLength(raf.length());
-                fileMsg.setTotalRead(0);
-                int read;
-                int part = 0;
-                ChannelFuture future = null;
-                while ((read = raf.read(buf)) > 0) {
-                    fileMsg.setRead(read);
-                    fileMsg.setData(buf);
-                    fileMsg.setPart(part++);
-                    fileMsg.setTotalRead(fileMsg.getTotalRead() + read);
-
-                    future = ctx.writeAndFlush(fileMsg);
-//                    System.out.println("isDone: " + future.isDone());
-                    if (!future.isSuccess()) {
-//                        System.out.println(future.getNow());
-//                        System.out.println(future);
-//                        System.out.println("isDone: " + future.isDone());
-//                        System.out.println("isSuccess: " + future.isSuccess());
-//                        System.out.println(fileMsg);
-//                        Thread.sleep(10000);
-                    }
-                }
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
+                int read = raf.read(buf);
+                ByteBuf buf1 = ctx.alloc().buffer(read, MAX_CHUNK_SIZE);
+                fileMsg.setRead(raf.read(buf1));
+                fileMsg.setData(buf1);
+                ctx.writeAndFlush(fileMsg);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -74,11 +57,11 @@ public class ServerMainHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void chanelFileWrite2(ChannelHandlerContext ctx, FileRequest msg) throws IOException {
-        System.out.println(msg.getFilename());
+//        System.out.println(msg.getId());
         try {
-            String path = FileUtil.find(Server.PARTS, msg.getFilename());
+            String path = FileUtil.find(Server.PARTS, msg.getId());
             try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
-//                ctx.writeAndFlush(new ChunkedFile(raf, CHUNK_FILE_SIZE));
+//                ctx.writeAndFlush(new ChunkedFile(raf, MAX_CHUNK_SIZE));
                 ctx.writeAndFlush(new DefaultFileRegion(raf.getChannel(), 0, raf.length()));
             }
         } catch (IOException e) {
