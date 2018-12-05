@@ -47,13 +47,14 @@ public class FileMessage extends AbstractMessage {
      * @throws IOException исключение
      */
     public void writeAndRequest(String storage, ChannelHandlerContext ctx) throws IOException {
-        // пишем данные в файл, если offset == 0 значит, это первая часть, поэтому создаем файл
-        try (FileOutputStream file = new FileOutputStream(storage + id, offset == 0)) {
+        // пишем данные в файл, если offset != 0 значит, это первая часть, поэтому создаем файл
+        try (FileOutputStream file = new FileOutputStream(storage + id, offset != 0)) {
             file.write(data, 0, read);
         }
         // если есть еще данные, то отправляем запрос на следующую часть, указав в качестве смещения сколько всего байт было получено
         if (hasNextData())
             ctx.writeAndFlush(new FileRequest(id, getTotalRead()));
+
         log.debug(this.toString());
     }
 
