@@ -1,4 +1,4 @@
-package com.server;
+package com.server.handler;
 
 import com.common.entity.FileMessage;
 import io.netty.channel.ChannelHandlerContext;

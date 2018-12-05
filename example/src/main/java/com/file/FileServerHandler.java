@@ -36,7 +36,7 @@ public class FileServerHandler extends SimpleChannelInboundHandler<String> {
             try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
                 long len = raf.length();
                 ctx.write("OK: " + len + '\n');
-//                ctx.write(new DefaultFileRegion(raf.getChannel(), 0, len));
+//                ctx.write(new DefaultFileRegion(raf.getChannel(), 0, length));
                 ctx.write(new ChunkedFile(raf, 1024 * 1024 * 1024));
                 ctx.writeAndFlush("\n");
             }

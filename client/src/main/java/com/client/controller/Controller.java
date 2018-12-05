@@ -56,7 +56,7 @@ public class Controller implements Initializable {
 
     public void pressOnDownloadBtn(ActionEvent actionEvent) {
         if (tfFileName.getLength() > 0) {
-            Network.sendMsg(new FileRequest(tfFileName.getText()));
+//            Network.sendMsg(new FileRequest(tfFileName.getText()));
             tfFileName.clear();
         }
     }

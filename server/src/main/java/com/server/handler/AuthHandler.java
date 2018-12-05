@@ -10,7 +10,7 @@ import io.netty.util.ReferenceCountUtil;
 /**
  * Проверка авторизации клента
  * если клиент уже был автоизирован, то прокидываем сообщение дальше,
- * иначе если токен не валидный или сообщение не {@link AuthRequest}, то отвечаем {@link UnauthorizedResponse}
+ * иначе: если токен не валидный или сообщение не {@link AuthRequest}, то отвечаем {@link UnauthorizedResponse}
  */
 public class AuthHandler extends ChannelInboundHandlerAdapter {
 

@@ -1,27 +1,21 @@
 package com.client;
 
-import com.common.entity.AbstractMessage;
+import com.client.init.ChannelInitializer;
 import com.common.entity.AuthRequest;
 import com.common.entity.FileRequest;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.string.StringDecoder;
-import io.netty.handler.codec.string.StringEncoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.handler.stream.ChunkedWriteHandler;
-import io.netty.util.CharsetUtil;
-
+import lombok.extern.slf4j.Slf4j;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+@Slf4j
 public class Client {
 
     static final String HOST = System.getProperty("host", "127.0.0.1");
@@ -38,7 +32,7 @@ public class Client {
             b.group(group)
                     .channel(NioSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.TRACE))
-                    .handler(new ObjectChannelInitializer());
+                    .handler(new ChannelInitializer());
 
             Channel ch = b.connect(HOST, PORT).sync().channel();
 
@@ -52,7 +46,7 @@ public class Client {
                 if (line.startsWith("auth:"))
                     msg = new AuthRequest("");
                 else if (line.startsWith("get:"))
-                    msg = new FileRequest(line.substring("get:".length()).trim());
+                    msg = new FileRequest(line.substring("get:".length()).trim(), 0);
 
                 if (msg == null) msg = line;
 

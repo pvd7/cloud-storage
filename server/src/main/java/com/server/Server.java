@@ -1,5 +1,6 @@
 package com.server;
 
+import com.server.init.ChannelInitializer;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
@@ -8,14 +9,14 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import lombok.extern.slf4j.Slf4j;
 
-import java.nio.charset.StandardCharsets;
-
+@Slf4j
 public class Server {
 
     final static private int PORT = 8023;
 
-    // основная директоррия с файлами
+    // основная директория с файлами
     public static final String STORAGE = "server_storage";
     // список частей хранилища
 //    public static final String[] PARTS = {STORAGE + "/part01/", STORAGE + "/part02/"};
@@ -32,7 +33,8 @@ public class Server {
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 128)
                     .handler(new LoggingHandler(LogLevel.INFO))
-                    .childHandler(new ObjectChannelInitializer());
+                    .childHandler(new ChannelInitializer());
+
             ChannelFuture future = b.bind(PORT).sync();
             future.channel().closeFuture().sync();
         } finally {
