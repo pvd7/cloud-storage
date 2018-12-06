@@ -2,6 +2,7 @@ package com.client;
 
 import com.client.init.ChannelInitializer;
 import com.common.entity.AuthRequest;
+import com.common.entity.FileMessage;
 import com.common.entity.FileRequest;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -47,6 +48,9 @@ public class Client {
                     msg = new AuthRequest("");
                 else if (line.startsWith("get:"))
                     msg = new FileRequest(line.substring("get:".length()).trim(), 0);
+                else if (line.startsWith("post:")) {
+                    msg = new FileMessage(8 * 1024);
+                }
 
                 if (msg == null) msg = line;
 

@@ -7,24 +7,27 @@ import io.netty.channel.*;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.RandomAccessFile;
-
 @Slf4j
 public class MainHandler extends ChannelInboundHandlerAdapter {
 
-    // максимальный размер массива с данными из файла в одном FileMessage
-    private static final int MAX_CHUNK_SIZE = Integer.parseInt(System.getProperty("max_chunk_size", String.valueOf(8 * 1024)));;
-    // буфер, в который считываются данные из файла
-    private byte[] buffer = new byte[MAX_CHUNK_SIZE];
+    // список частей хранилища
+    private static final String[] PARTS = {"server_storage/part01/", "server_storage/part02/", "D:/Install/"};
 
-    private FileMessage fileMsg = new FileMessage();
+    // директория для временных файлов
+    private static final String STORAGE_TEMP = System.getProperty("storage_temp", "server_storage/temp/");
+
+    // максимальный размер массива с данными из файла в одном FileMessage
+    private static final int MAX_CHUNK_SIZE = Integer.parseInt(System.getProperty("max_chunk_size", String.valueOf(16 * 1024)));
+
+    // сообщение с частью данных файла
+    private FileMessage fileMsg = new FileMessage(MAX_CHUNK_SIZE);
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         try {
             if (msg == null) return;
-            if (msg instanceof FileRequest) chanelFileWrite(ctx, (FileRequest) msg);
-            else if (msg instanceof FileMessage) channelFileRead((FileMessage) msg);
+            if (msg instanceof FileRequest) fileRequest(ctx, (FileRequest) msg);
+            else if (msg instanceof FileMessage) fileMessage(ctx, (FileMessage) msg);
             else log.debug(msg.toString());
         } catch (Exception e) {
             ctx.writeAndFlush(e);
@@ -34,25 +37,13 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void chanelFileWrite(ChannelHandlerContext ctx, FileRequest fileRequest) throws Exception {
-        log.debug(fileRequest.toString());
-
-        String path = FileUtil.find(Server.PARTS, fileRequest.getId());
-        try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
-            raf.seek(fileRequest.getOffset());
-            fileMsg.setRead(raf.read(buffer));
-            fileMsg.setData(buffer);
-            fileMsg.setOffset(fileRequest.getOffset());
-            fileMsg.setId(fileRequest.getId());
-            fileMsg.setLength(raf.length());
-            ctx.writeAndFlush(fileMsg);
-        }
-
-        log.debug(fileMsg.toString());
+    private void fileRequest(ChannelHandlerContext ctx, FileRequest msg) throws Exception {
+        String path = FileUtil.find(PARTS, msg.getId());
+        fileMsg.channelWrite(ctx, path, msg);
     }
 
-    private void channelFileRead(FileMessage fileMsg) throws Exception {
-
+    private void fileMessage(ChannelHandlerContext ctx, FileMessage msg) throws Exception {
+        msg.fileWrite(ctx, STORAGE_TEMP);
     }
 
     @Override

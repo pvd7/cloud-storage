@@ -16,14 +16,7 @@ public class Server {
 
     final static private int PORT = 8023;
 
-    // основная директория с файлами
-    public static final String STORAGE = "server_storage";
-    // список частей хранилища
-//    public static final String[] PARTS = {STORAGE + "/part01/", STORAGE + "/part02/"};
-    public static final String[] PARTS = {"server_storage/part01/", "server_storage/part02/", "D:/Install/"};
-
-
-    public void run() throws Exception {
+    private void run() throws Exception {
         EventLoopGroup mainGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
