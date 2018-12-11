@@ -11,6 +11,8 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.UUID;
+
 @Slf4j
 public class Server {
 
@@ -38,6 +40,8 @@ public class Server {
 
     public static void main(String[] args) throws Exception {
         new Server().run();
+
+//        UUID uuid = UUID.fromString("rewrewr");
     }
 
 }

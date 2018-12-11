@@ -10,6 +10,10 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 import java.io.*;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 public class MainHandler extends ChannelInboundHandlerAdapter {
@@ -22,6 +26,8 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
 
     // сообщение с частью данных файла
     private FileMessage fileMsg = new FileMessage(MAX_CHUNK_SIZE);
+
+    public static final Map<UUID, String> uploadFiles = new HashMap<>();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -40,8 +46,8 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private void fileRequest(ChannelHandlerContext ctx, FileRequest msg) {
-        String path = FileUtil.find(PARTS, msg.getId());
+    private void fileRequest(ChannelHandlerContext ctx, FileRequest msg) throws IOException {
+        String path = uploadFiles.get(msg.getId());
         fileMsg.channelWrite(ctx, path, msg);
     }
 
