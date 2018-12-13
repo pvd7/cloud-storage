@@ -11,12 +11,11 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.UUID;
-
 @Slf4j
 public class Server {
 
-    final static private int PORT = 8023;
+    private static final int PORT = Integer.parseInt(System.getProperty("port", "8023"));
+    private static final int SO_BACKLOG = Integer.parseInt(System.getProperty("port", "128"));
 
     private void run() throws Exception {
         EventLoopGroup mainGroup = new NioEventLoopGroup();
@@ -26,7 +25,7 @@ public class Server {
             ServerBootstrap b = new ServerBootstrap();
             b.group(mainGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .option(ChannelOption.SO_BACKLOG, 128)
+                    .option(ChannelOption.SO_BACKLOG, SO_BACKLOG)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer());
 

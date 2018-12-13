@@ -3,29 +3,27 @@ package com.common.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
-import java.util.UUID;
-
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class FileRequest extends AbstractMessage {
 
-    private String id; // ID файла
-    private UUID uuid;
+    private String uuid; // ID файла
+//    private UUID uuid; // UUID файла
     private long offset; // смещение
 
     /**
-     * @param id     ID файла
+     * @param uuid     ID файла
      * @param offset начальная позиция в файле
      */
-    public FileRequest(String id, long offset) {
-        this.id = id;
+    public FileRequest(String uuid, long offset) {
+        this.uuid = uuid;
         this.offset = offset;
     }
 
     @Override
     public String toString() {
         return "FileRequest{" +
-                "id='" + id + '\'' +
+                "uuid='" + uuid + '\'' +
                 ", offset=" + offset +
                 '}';
     }

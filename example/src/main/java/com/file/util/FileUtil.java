@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 public class FileUtil {
 
     public static String find(String[] paths, String file) throws FileNotFoundException {
-        if ("".equals(file)) throw new FileNotFoundException("the id is empty");
+        if ("".equals(file)) throw new FileNotFoundException("the uuid is empty");
 
         int len = paths.length;
         for (int i = 0; i < len; i++) {

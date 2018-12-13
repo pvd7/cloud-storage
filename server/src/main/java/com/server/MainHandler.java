@@ -38,7 +38,7 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void fileRequest(ChannelHandlerContext ctx, FileRequest msg) throws Exception {
-        String path = FileUtil.find(PARTS, msg.getId());
+        String path = FileUtil.find(PARTS, msg.getUuid());
         fileMsg.channelWrite(ctx, path, msg);
     }
 

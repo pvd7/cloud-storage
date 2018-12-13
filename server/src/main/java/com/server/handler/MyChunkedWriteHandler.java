@@ -13,7 +13,7 @@ public class MyChunkedWriteHandler extends ChunkedWriteHandler {
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) throws Exception {
         System.out.println(this.getClass().getName() + ": " + msg);
         // корректно пишет в файл
-//        try (FileOutputStream file = new FileOutputStream("client_storage/tmp/" + ((FileMessage) msg).getId(), true)) {
+//        try (FileOutputStream file = new FileOutputStream("client_storage/tmp/" + ((FileMessage) msg).getUuid(), true)) {
 //            file.write(((FileMessage) msg).getData(), 0, ((FileMessage) msg).getRead());
 //        };
 //        System.out.println(msg);

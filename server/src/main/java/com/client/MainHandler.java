@@ -4,13 +4,11 @@ import com.common.entity.AuthorizedResponse;
 import com.common.entity.FileMessage;
 import com.common.entity.FileRequest;
 import com.common.entity.UnauthorizedResponse;
-import com.server.util.FileUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 import java.io.*;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -27,7 +25,7 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     // сообщение с частью данных файла
     private FileMessage fileMsg = new FileMessage(MAX_CHUNK_SIZE);
 
-    public static final Map<UUID, String> uploadFiles = new HashMap<>();
+    public static final Map<String, String> uploadFiles = new HashMap<>();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -47,7 +45,7 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void fileRequest(ChannelHandlerContext ctx, FileRequest msg) throws IOException {
-        String path = uploadFiles.get(msg.getId());
+        String path = uploadFiles.get(msg.getUuid());
         fileMsg.channelWrite(ctx, path, msg);
     }
 
@@ -61,8 +59,8 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
         log.error(e.toString(), e);
     }
 
-    private void fileMessage(ChannelHandlerContext ctx, FileMessage fileMsg) throws IOException {
-        fileMsg.fileWrite(ctx, STORAGE_TEMP);
+    private void fileMessage(ChannelHandlerContext ctx, FileMessage msg) throws IOException {
+        msg.fileWrite(ctx, STORAGE_TEMP);
     }
 
     @Override

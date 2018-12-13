@@ -4,7 +4,6 @@ import io.netty.channel.ChannelHandlerContext;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
-
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -15,7 +14,7 @@ import java.util.Arrays;
 @Data
 public class FileMessage extends AbstractMessage {
 
-    private String id;   // id файла
+    private String id;   // uuid файла
     private String hash; // hash файла
     private long length; // размер файла
     private long offset; // смещение в файле
@@ -65,6 +64,9 @@ public class FileMessage extends AbstractMessage {
         // если есть еще данные, то отправляем запрос на следующую часть, указав в качестве смещения сколько всего байт было получено
         if (hasNextData())
             ctx.writeAndFlush(new FileRequest(id, getTotalRead()));
+//        else {
+//           log.debug(FileUtil.sha256Hex(storage + id));
+//        }
 
         log.debug(this.toString());
     }
@@ -80,8 +82,8 @@ public class FileMessage extends AbstractMessage {
     public void channelWrite(ChannelHandlerContext ctx, String path, FileRequest fileRequest) throws IOException {
         log.debug(fileRequest.toString());
 
-        id = fileRequest.getId();
-        hash = fileRequest.getId();
+        id = fileRequest.getUuid();
+        hash = fileRequest.getUuid();
         offset = fileRequest.getOffset();
         try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
             raf.seek(fileRequest.getOffset());
@@ -96,7 +98,7 @@ public class FileMessage extends AbstractMessage {
     @Override
     public String toString() {
         return "FileMessage{" +
-                "id='" + id + '\'' +
+                "uuid='" + id + '\'' +
                 ", hash='" + hash + '\'' +
                 ", length=" + length +
                 ", offset=" + offset +
