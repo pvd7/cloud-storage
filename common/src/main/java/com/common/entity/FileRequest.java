@@ -8,8 +8,9 @@ import lombok.EqualsAndHashCode;
 public class FileRequest extends AbstractMessage {
 
     private String uuid; // ID файла
-//    private UUID uuid; // UUID файла
     private long offset; // смещение
+    private String hash; // UUID файла
+    private String filename; // имя файла
 
     /**
      * @param uuid     ID файла
@@ -18,6 +19,12 @@ public class FileRequest extends AbstractMessage {
     public FileRequest(String uuid, long offset) {
         this.uuid = uuid;
         this.offset = offset;
+    }
+
+    public FileRequest(long offset, String hash, String filename) {
+        this.offset = offset;
+        this.hash = hash;
+        this.filename = filename;
     }
 
     @Override

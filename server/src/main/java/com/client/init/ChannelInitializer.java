@@ -1,6 +1,6 @@
 package com.client.init;
 
-import com.client.MainHandler;
+import com.client.handler.MainHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;

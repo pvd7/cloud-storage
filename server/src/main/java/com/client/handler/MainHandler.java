@@ -1,17 +1,19 @@
-package com.client;
+package com.client.handler;
 
 import com.common.entity.AuthorizedResponse;
 import com.common.entity.FileMessage;
 import com.common.entity.FileRequest;
 import com.common.entity.UnauthorizedResponse;
+import com.common.util.FileUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.DecoderException;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @Slf4j
 public class MainHandler extends ChannelInboundHandlerAdapter {
@@ -59,8 +61,11 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
         log.error(e.toString(), e);
     }
 
-    private void fileMessage(ChannelHandlerContext ctx, FileMessage msg) throws IOException {
-        msg.fileWrite(ctx, STORAGE_TEMP);
+    private void fileMessage(ChannelHandlerContext ctx, FileMessage msg) throws IOException, DecoderException {
+        msg.fileWrite(ctx, STORAGE_TEMP + msg.getFilenameOrHash());
+        if (!msg.hasNextData()) {
+            log.debug(FileUtil.sha256Hex(STORAGE_TEMP + msg.getFilenameOrHash()));
+        }
     }
 
     @Override

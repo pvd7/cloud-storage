@@ -1,17 +1,27 @@
-package com.server;
+package com.server.handler;
 
 import com.common.entity.FileMessage;
 import com.common.entity.FileRequest;
-import com.server.util.FileUtil;
+import com.common.util.FileUtil;
+import com.common.util.StringUtil;
 import io.netty.channel.*;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.binary.Hex;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 @Slf4j
 public class MainHandler extends ChannelInboundHandlerAdapter {
 
     // список частей хранилища
     private static final String[] PARTS = {"server_storage/part01/", "server_storage/part02/", "D:/Install/"};
+    private static final String[] INFO = {"server_storage/info/"};
 
     // директория для временных файлов
     private static final String STORAGE_TEMP = System.getProperty("storage_temp", "server_storage/temp/");
@@ -21,6 +31,8 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
 
     // сообщение с частью данных файла
     private FileMessage fileMsg = new FileMessage(MAX_CHUNK_SIZE);
+
+    Properties info = new Properties();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -38,8 +50,18 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void fileRequest(ChannelHandlerContext ctx, FileRequest msg) throws Exception {
-        String path = FileUtil.find(PARTS, msg.getUuid());
-        fileMsg.channelWrite(ctx, path, msg);
+        if (StringUtil.isEmpty(msg.getHash())) {
+            String infoPath = FileUtil.find(INFO, msg.getUuid() + ".ini");
+            try (InputStreamReader reader = new InputStreamReader(new FileInputStream(infoPath), StandardCharsets.UTF_8)) {
+                info.load(reader);
+                fileMsg.setFilename(info.getProperty("filename", "unknown"));
+                fileMsg.setHash(info.getProperty("hash"));
+            }
+        } else
+            fileMsg.setHash(msg.getHash());
+
+        String filePath = FileUtil.find(PARTS, fileMsg.getHash());
+        fileMsg.channelWrite(ctx, filePath, msg);
     }
 
     private void fileMessage(ChannelHandlerContext ctx, FileMessage msg) throws Exception {

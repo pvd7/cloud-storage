@@ -1,12 +1,11 @@
 package com.server.init;
 
-import com.server.MainHandler;
+import com.server.handler.MainHandler;
 import com.server.handler.AuthHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
-import io.netty.handler.stream.ChunkedWriteHandler;
 
 public class ChannelInitializer extends io.netty.channel.ChannelInitializer<SocketChannel> {
 

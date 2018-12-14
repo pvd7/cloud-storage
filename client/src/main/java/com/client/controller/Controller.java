@@ -3,7 +3,6 @@ package com.client.controller;
 import com.client.net.Network;
 import com.common.entity.AbstractMessage;
 import com.common.entity.FileMessage;
-import com.common.entity.FileRequest;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
@@ -38,7 +37,7 @@ public class Controller implements Initializable {
                     AbstractMessage obj = Network.readObject();
                     if (obj instanceof FileMessage) {
                         FileMessage fm = (FileMessage) obj;
-                        Files.write(Paths.get( STORAGE + "/" + fm.getId()), fm.getData(), StandardOpenOption.CREATE);
+                        Files.write(Paths.get( STORAGE + "/" + fm.getUuid()), fm.getData(), StandardOpenOption.CREATE);
                         refreshLocalFilesList();
                     }
                 }

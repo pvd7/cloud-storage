@@ -43,11 +43,16 @@ public class Client {
                 String line = in.readLine();
                 if (line == null) break;
 
+                int i;
                 msg = null;
                 if (line.startsWith("auth:"))
                     msg = new AuthRequest("");
                 else if (line.startsWith("get:"))
                     msg = new FileRequest(line.substring("get:".length()).trim(), 0);
+                else if (line.startsWith("id:"))
+                    msg = new FileRequest(line.substring("id:".length()).trim(), 0);
+                else if (line.startsWith("hash:"))
+                    msg = new FileRequest(0, line.substring("hash:".length()).trim(), "new file");
                 else if (line.startsWith("post:")) {
                     msg = new FileMessage(8 * 1024);
                 }

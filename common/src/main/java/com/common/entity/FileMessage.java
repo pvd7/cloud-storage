@@ -1,12 +1,17 @@
 package com.common.entity;
 
+import com.common.util.StringUtil;
 import io.netty.channel.ChannelHandlerContext;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 @Slf4j
@@ -14,8 +19,9 @@ import java.util.Arrays;
 @Data
 public class FileMessage extends AbstractMessage {
 
-    private String id;   // uuid файла
+    private String uuid;   // uuid файла
     private String hash; // hash файла
+    private String filename; // имя файла
     private long length; // размер файла
     private long offset; // смещение в файле
     private int read;    // сколько байт передаем
@@ -52,20 +58,20 @@ public class FileMessage extends AbstractMessage {
      * Сохраняет полученные данные в файл
      * и если это была не последняя часть файла, то отпраяляет запрос на следующую часть данных
      *
-     * @param storage директория, где лежит файл
+     * @param file директория, где лежит файл
      * @param ctx     контекст канала
      * @throws IOException исключение
      */
-    public void fileWrite(ChannelHandlerContext ctx, String storage) throws IOException {
+    public void fileWrite(ChannelHandlerContext ctx, String file) throws IOException {
         // пишем данные в файл, если offset > 0 значит, это первая часть, поэтому создаем файл, append = (offset > 0)
-        try (FileOutputStream file = new FileOutputStream(storage + id, offset > 0)) {
-            file.write(data, 0, read);
+        try (FileOutputStream out = new FileOutputStream(file, offset > 0)) {
+            out.write(data, 0, read);
         }
         // если есть еще данные, то отправляем запрос на следующую часть, указав в качестве смещения сколько всего байт было получено
         if (hasNextData())
-            ctx.writeAndFlush(new FileRequest(id, getTotalRead()));
+            ctx.writeAndFlush(new FileRequest(uuid, getTotalRead()));
 //        else {
-//           log.debug(FileUtil.sha256Hex(storage + id));
+//           log.debug(FileUtil.sha256Hex(file + uuid));
 //        }
 
         log.debug(this.toString());
@@ -82,8 +88,7 @@ public class FileMessage extends AbstractMessage {
     public void channelWrite(ChannelHandlerContext ctx, String path, FileRequest fileRequest) throws IOException {
         log.debug(fileRequest.toString());
 
-        id = fileRequest.getUuid();
-        hash = fileRequest.getUuid();
+        uuid = fileRequest.getUuid();
         offset = fileRequest.getOffset();
         try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
             raf.seek(fileRequest.getOffset());
@@ -95,16 +100,21 @@ public class FileMessage extends AbstractMessage {
         log.debug(this.toString());
     }
 
+    public String getFilenameOrHash() throws DecoderException {
+        return StringUtil.isEmpty(filename) ? hash : filename;
+//        return StringUtil.isEmpty(filename) ? hash : new String(Hex.decodeHex(filename), StandardCharsets.UTF_8);
+    }
+
     @Override
     public String toString() {
         return "FileMessage{" +
-                "uuid='" + id + '\'' +
+                "uuid='" + uuid + '\'' +
                 ", hash='" + hash + '\'' +
+                ", filename='" + filename + '\'' +
                 ", length=" + length +
                 ", offset=" + offset +
                 ", read=" + read +
-                ", data=" + Arrays.toString(data) +
+//                ", data=" + Arrays.toString(data) +
                 '}';
     }
-
 }
