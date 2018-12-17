@@ -25,7 +25,7 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     private static final int MAX_CHUNK_SIZE = Integer.parseInt(System.getProperty("max_chunk_size", String.valueOf(16 * 1024)));
 
     // сообщение с частью данных файла
-    private FileMessage fileMsg = new FileMessage(MAX_CHUNK_SIZE);
+    public FileMessage fileMsg = new FileMessage(MAX_CHUNK_SIZE);
 
     public static final Map<String, String> uploadFiles = new HashMap<>();
 

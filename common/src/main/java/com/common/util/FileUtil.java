@@ -13,10 +13,9 @@ public class FileUtil {
         if (file == null) throw new FileNotFoundException("the filename is null");
         if (file.trim().isEmpty()) throw new FileNotFoundException("the filename is empty");
 
-        int len = paths.length;
-        for (int i = 0; i < len; i++) {
-            if (Files.exists(Paths.get(paths[i] + file)))
-                return paths[i] + file;
+        for (String path : paths) {
+            if (Files.exists(Paths.get(path + file)))
+                return path + file;
         }
 
         throw new FileNotFoundException(file);
@@ -27,4 +26,17 @@ public class FileUtil {
             return DigestUtils.sha256Hex(is);
         }
     }
+
+    public static boolean exists(String[] paths, String file) throws FileNotFoundException {
+        if (file == null) throw new FileNotFoundException("the filename is null");
+        if (file.trim().isEmpty()) throw new FileNotFoundException("the filename is empty");
+
+        for (String path : paths) {
+            if (Files.exists(Paths.get(path + file)))
+                return true;
+        }
+
+        return false;
+    }
+
 }

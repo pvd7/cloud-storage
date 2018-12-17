@@ -1,5 +1,6 @@
 package com.client;
 
+import com.client.handler.MainHandler;
 import com.client.init.ChannelInitializer;
 import com.common.entity.AuthRequest;
 import com.common.entity.FileMessage;
@@ -15,6 +16,10 @@ import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.RandomAccessFile;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 @Slf4j
 public class Client {
@@ -43,7 +48,6 @@ public class Client {
                 String line = in.readLine();
                 if (line == null) break;
 
-                int i;
                 msg = null;
                 if (line.startsWith("auth:"))
                     msg = new AuthRequest("");
@@ -54,7 +58,19 @@ public class Client {
                 else if (line.startsWith("hash:"))
                     msg = new FileRequest(0, line.substring("hash:".length()).trim(), "new file");
                 else if (line.startsWith("post:")) {
-                    msg = new FileMessage(8 * 1024);
+                    Path path = Paths.get("client_storage/" + line.substring("post:".length()).trim());
+//                    log.debug(path.getFileName().toString());
+//                    log.debug(path.toAbsolutePath().toString());
+
+                    UUID uuid = UUID.randomUUID();
+                    MainHandler.uploadFiles.put(uuid.toString().replace("-", ""), path.toAbsolutePath().toString());
+                    FileMessage fileMsg = new FileMessage(8 * 1024);
+                    fileMsg.setUuid(uuid.toString().replace("-", ""));
+                    fileMsg.setFilename(path.getFileName().toString());
+                    try (RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")) {
+                        fileMsg.setLength(file.length());
+                    }
+                    msg = fileMsg;
                 }
 
                 if (msg == null) msg = line;

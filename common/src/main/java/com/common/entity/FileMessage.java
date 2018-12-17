@@ -28,9 +28,7 @@ public class FileMessage extends AbstractMessage {
     private byte[] data; // массив с байтами из файла
 
     /**
-     * Конструктор
-     *
-     * @param capacity размер буфера с данными
+     * @param capacity массива буфера с данными
      */
     public FileMessage(int capacity) {
         data = new byte[capacity];
@@ -70,9 +68,6 @@ public class FileMessage extends AbstractMessage {
         // если есть еще данные, то отправляем запрос на следующую часть, указав в качестве смещения сколько всего байт было получено
         if (hasNextData())
             ctx.writeAndFlush(new FileRequest(uuid, getTotalRead()));
-//        else {
-//           log.debug(FileUtil.sha256Hex(file + uuid));
-//        }
 
         log.debug(this.toString());
     }
