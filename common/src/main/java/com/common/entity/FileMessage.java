@@ -8,10 +8,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 @Slf4j
@@ -60,9 +62,9 @@ public class FileMessage extends AbstractMessage {
      * @param ctx     контекст канала
      * @throws IOException исключение
      */
-    public void fileWrite(ChannelHandlerContext ctx, String file) throws IOException {
+    public void fileWrite(ChannelHandlerContext ctx, Path file) throws IOException {
         // пишем данные в файл, если offset > 0 значит, это первая часть, поэтому создаем файл, append = (offset > 0)
-        try (FileOutputStream out = new FileOutputStream(file, offset > 0)) {
+        try (FileOutputStream out = new FileOutputStream(file.toFile(), offset > 0)) {
             out.write(data, 0, read);
         }
         // если есть еще данные, то отправляем запрос на следующую часть, указав в качестве смещения сколько всего байт было получено
@@ -76,16 +78,16 @@ public class FileMessage extends AbstractMessage {
      * Отправляет часть данных файла в канал
      *
      * @param ctx         контекст канала
-     * @param path        путь к файлу
+     * @param file        путь к файлу
      * @param fileRequest запрашиваемые данные
      * @throws IOException исключение
      */
-    public void channelWrite(ChannelHandlerContext ctx, String path, FileRequest fileRequest) throws IOException {
+    public void channelWrite(ChannelHandlerContext ctx, File file, FileRequest fileRequest) throws IOException {
         log.debug(fileRequest.toString());
 
         uuid = fileRequest.getUuid();
         offset = fileRequest.getOffset();
-        try (RandomAccessFile raf = new RandomAccessFile(path, "r")) {
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
             raf.seek(fileRequest.getOffset());
             read = raf.read(data);
             length = raf.length();

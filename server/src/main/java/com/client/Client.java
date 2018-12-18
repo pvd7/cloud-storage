@@ -63,7 +63,7 @@ public class Client {
 //                    log.debug(path.toAbsolutePath().toString());
 
                     UUID uuid = UUID.randomUUID();
-                    MainHandler.uploadFiles.put(uuid.toString().replace("-", ""), path.toAbsolutePath().toString());
+                    MainHandler.uploadFiles.put(uuid.toString().replace("-", ""), path.toFile());
                     FileMessage fileMsg = new FileMessage(8 * 1024);
                     fileMsg.setUuid(uuid.toString().replace("-", ""));
                     fileMsg.setFilename(path.getFileName().toString());

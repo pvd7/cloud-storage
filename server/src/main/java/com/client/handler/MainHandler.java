@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,15 +21,16 @@ import java.util.Map;
 public class MainHandler extends ChannelInboundHandlerAdapter {
 
     private final static String STORAGE = "client_storage";
-    public static final String STORAGE_TEMP = "client_storage/temp/";
+//    public static final String STORAGE_TEMP = "client_storage/temp/";
+    private static final Path STORAGE_TEMP = Paths.get("client_storage/temp/");
 
     // максимальный размер массива с данными из файла в одном FileMessage
     private static final int MAX_CHUNK_SIZE = Integer.parseInt(System.getProperty("max_chunk_size", String.valueOf(16 * 1024)));
 
     // сообщение с частью данных файла
-    public FileMessage fileMsg = new FileMessage(MAX_CHUNK_SIZE);
+    private FileMessage fileMsg = new FileMessage(MAX_CHUNK_SIZE);
 
-    public static final Map<String, String> uploadFiles = new HashMap<>();
+    public static final Map<String, File> uploadFiles = new HashMap<>();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -47,8 +50,9 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void fileRequest(ChannelHandlerContext ctx, FileRequest msg) throws IOException {
-        String path = uploadFiles.get(msg.getUuid());
-        fileMsg.channelWrite(ctx, path, msg);
+        File file = uploadFiles.get(msg.getUuid());
+        fileMsg.setFilename(file.getName());
+        fileMsg.channelWrite(ctx, file, msg);
     }
 
     private void unauthorizedResponse(UnauthorizedResponse msg) {
@@ -62,9 +66,10 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void fileMessage(ChannelHandlerContext ctx, FileMessage msg) throws IOException, DecoderException {
-        msg.fileWrite(ctx, STORAGE_TEMP + msg.getFilenameOrHash());
+        Path file = STORAGE_TEMP.resolve(msg.getFilenameOrHash());
+        msg.fileWrite(ctx, file);
         if (!msg.hasNextData()) {
-            log.debug(FileUtil.sha256Hex(STORAGE_TEMP + msg.getFilenameOrHash()));
+            log.debug(FileUtil.sha256Hex(file));
         }
     }
 

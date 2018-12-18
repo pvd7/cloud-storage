@@ -6,25 +6,35 @@ import com.common.util.FileUtil;
 import com.common.util.StringUtil;
 import io.netty.channel.*;
 import io.netty.util.ReferenceCountUtil;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
-import java.util.UUID;
 
 @Slf4j
 public class MainHandler extends ChannelInboundHandlerAdapter {
 
     // список частей хранилища
-    private static final String[] PARTS = {"server_storage/part01/", "server_storage/part02/", "D:/Install/"};
-    private static final String[] INFO = {"server_storage/info/"};
-    private static final String CURRENT_PART = "server_storage/part02/";
-    private static final String CURRENT_INFO = "server_storage/info/";
+//    private static final String[] STORAGE_PARTS = {"server_storage/part01/", "server_storage/part02/", "D:/Install/"};
+    private static final Path[] STORAGE_PARTS = {
+            Paths.get("server_storage/part01")
+            , Paths.get("server_storage/part02")
+            , Paths.get("D:/Install/")};
 
+    //    private static final String[] STORAGE_INFO = {"server_storage/info/"};
+    private static final Path[] STORAGE_INFO = {Paths.get("server_storage/info/")};
+    //    private static final String CURRENT_PART = "server_storage/part02/";
+    private static final Path CURRENT_PART = Paths.get("server_storage/part02/");
+    //    private static final String CURRENT_INFO = "server_storage/info/";
+    private static final Path CURRENT_INFO = Paths.get("server_storage/info/");
 
     // директория для временных файлов
-    private static final String STORAGE_TEMP = System.getProperty("storage_temp", "server_storage/temp/");
+    private static final Path STORAGE_TEMP = Paths.get(System.getProperty("storage_temp", "server_storage/temp/"));
 
     // максимальный размер массива с данными из файла в одном FileMessage
     private static final int MAX_CHUNK_SIZE = Integer.parseInt(System.getProperty("max_chunk_size", String.valueOf(16 * 1024)));
@@ -34,6 +44,9 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
 
     private static final int STORAGE_PATH_DEPTH = 5;
     private static final int STORAGE_PATH_LENGTH = 3;
+
+    private static final String FILE_DATA_EXTENSION = ".data";
+    private static final String FILE_INFO_EXTENSION = ".info";
 
     private Properties info = new Properties();
 
@@ -52,23 +65,30 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
-    private String prepareFilenameForStorage(String filename) {
-        StringBuilder sb = new StringBuilder(filename.length() + STORAGE_PATH_DEPTH * STORAGE_PATH_LENGTH);
-        for (int i = 0; i < STORAGE_PATH_DEPTH; i++) {
-            sb.append(filename, i * STORAGE_PATH_LENGTH, STORAGE_PATH_LENGTH * (i + 1)).append("/");
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        log.error(cause.toString(), cause);
+        if (ctx.channel().isActive()) {
+            ctx.writeAndFlush(cause).addListener(ChannelFutureListener.CLOSE);
         }
-        sb.append(filename);
-        return sb.toString();
     }
 
-    private String findFileInStorage(String[] paths, String filename) throws FileNotFoundException {
-        return FileUtil.find(paths, prepareFilenameForStorage(filename));
+    private static Path getPathForStorage(@NonNull String uuid) {
+        Path path = Paths.get("");
+        for (int i = 0; i < STORAGE_PATH_DEPTH; i++) {
+            path = path.resolve(uuid.substring(i * STORAGE_PATH_LENGTH, (i + 1) * STORAGE_PATH_LENGTH));
+        }
+        return path;
+    }
+
+    private Path findFileInPaths(String uuid, Path[] paths) throws FileNotFoundException {
+        return FileUtil.find(getPathForStorage(uuid).resolve(uuid), paths);
     }
 
     private void fileRequest(ChannelHandlerContext ctx, FileRequest fileRequest) throws Exception {
         if (StringUtil.isEmpty(fileRequest.getHash())) {
-            String filename = FileUtil.find(INFO, prepareFilenameForStorage(fileRequest.getUuid()));
-            try (InputStreamReader stream = new InputStreamReader(new FileInputStream(filename), StandardCharsets.UTF_8)) {
+            Path file = findFileInPaths(fileRequest.getUuid() + FILE_INFO_EXTENSION, STORAGE_INFO);
+            try (InputStreamReader stream = new InputStreamReader(new FileInputStream(file.toFile()), StandardCharsets.UTF_8)) {
                 this.info.load(stream);
                 fileMsg.setFilename(this.info.getProperty("filename", "unknown"));
                 fileMsg.setHash(this.info.getProperty("hash"));
@@ -76,43 +96,50 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
         } else
             fileMsg.setHash(fileRequest.getHash());
 
-        String filename = FileUtil.find(INFO, prepareFilenameForStorage(fileMsg.getHash()));
-        fileMsg.channelWrite(ctx, filename, fileRequest);
+        Path file = findFileInPaths(fileMsg.getHash() + FILE_DATA_EXTENSION, STORAGE_PARTS);
+        fileMsg.channelWrite(ctx, file.toFile(), fileRequest);
     }
 
     private void fileMessage(ChannelHandlerContext ctx, FileMessage fileMsg) throws Exception {
-        // пишем кусок файла в времменую папку
-        fileMsg.fileWrite(ctx, STORAGE_TEMP + fileMsg.getUuid());
-        // если записали последнюю чать, то вычисляем hash, если в хранилище нет файла с таким хэшем, то переносим его туда
+        // сохраняем пришедшие данные в временный файл
+        Path fileTemp = STORAGE_TEMP.resolve(fileMsg.getUuid());
+        fileMsg.fileWrite(ctx, fileTemp);
+
+        // если записали последнюю часть, то сохраняем описание файла и переносим файл в хранилище
         if (!fileMsg.hasNextData()) {
-            String hash = FileUtil.sha256Hex(STORAGE_TEMP + fileMsg.getUuid());
-            // сохранем информацию о файле
-            String fileInfo = prepareFilenameForStorage(fileMsg.getUuid());
-            !!! необходимо создать все папки
-            try (OutputStream stream = new FileOutputStream(CURRENT_INFO + fileInfo)) {
-                this.info.store(stream,"");
-                this.info.setProperty("filename", fileMsg.getFilename());
-                this.info.setProperty("hash", hash);
-            }
-            String filename = prepareFilenameForStorage(hash);
-            if (!FileUtil.exists(PARTS, filename)) {
-                File file = new File(STORAGE_TEMP + fileMsg.getUuid());
-                File newFile = new File(CURRENT_PART + filename);
-                file.renameTo(newFile);
-            }
+            String uuid = fileMsg.getUuid();
+            String hash = FileUtil.sha256Hex(fileTemp);
+            storeFileInfo(uuid, fileMsg.getFilename(), hash);
+            storeFileData(fileTemp, hash);
         }
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.error(cause.toString(), cause);
-        if (ctx.channel().isActive()) {
-            ctx.writeAndFlush(cause).addListener(ChannelFutureListener.CLOSE);
+    private static void storeFileInfo(String uuid, String filename, String hash) throws IOException {
+        Path path = CURRENT_INFO.resolve(getPathForStorage(uuid));
+        Path file = Files.createDirectories(path)
+                .resolve(uuid + FILE_INFO_EXTENSION);
+        try (OutputStream stream = Files.newOutputStream(file)) {
+            Properties prop = new Properties();
+            prop.setProperty("filename", filename);
+            prop.setProperty("hash", hash);
+            prop.store(stream, "file description");
         }
     }
 
-    public static void main(String[] args) {
-        System.out.println(UUID.randomUUID().toString());
+    private static void storeFileData(Path source, String hash) throws IOException {
+        Path pathForStorage = getPathForStorage(hash);
+        Path file = Paths.get(hash + FILE_DATA_EXTENSION);
+        if (!FileUtil.exists(STORAGE_PARTS, pathForStorage.resolve(file))) {
+            Path target = Files.createDirectories(CURRENT_PART.resolve(pathForStorage))
+                    .resolve(file);
+            Files.move(source, target);
+        } else {
+            Files.delete(source);
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        String uuid = "d39f461c2af04794a41b009e78ebe56a";
     }
 
 }
