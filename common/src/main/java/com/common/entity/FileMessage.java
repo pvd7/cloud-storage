@@ -6,15 +6,12 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Hex;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Arrays;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
@@ -59,7 +56,7 @@ public class FileMessage extends AbstractMessage {
      * и если это была не последняя часть файла, то отпраяляет запрос на следующую часть данных
      *
      * @param file директория, где лежит файл
-     * @param ctx     контекст канала
+     * @param ctx  контекст канала
      * @throws IOException исключение
      */
     public void fileWrite(ChannelHandlerContext ctx, Path file) throws IOException {
@@ -70,8 +67,6 @@ public class FileMessage extends AbstractMessage {
         // если есть еще данные, то отправляем запрос на следующую часть, указав в качестве смещения сколько всего байт было получено
         if (hasNextData())
             ctx.writeAndFlush(new FileRequest(uuid, getTotalRead()));
-
-        log.debug(this.toString());
     }
 
     /**
@@ -83,8 +78,6 @@ public class FileMessage extends AbstractMessage {
      * @throws IOException исключение
      */
     public void channelWrite(ChannelHandlerContext ctx, File file, FileRequest fileRequest) throws IOException {
-        log.debug(fileRequest.toString());
-
         uuid = fileRequest.getUuid();
         offset = fileRequest.getOffset();
         try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
@@ -93,13 +86,10 @@ public class FileMessage extends AbstractMessage {
             length = raf.length();
         }
         ctx.writeAndFlush(this);
-
-        log.debug(this.toString());
     }
 
     public String getFilenameOrHash() throws DecoderException {
         return StringUtil.isEmpty(filename) ? hash : filename;
-//        return StringUtil.isEmpty(filename) ? hash : new String(Hex.decodeHex(filename), StandardCharsets.UTF_8);
     }
 
     @Override

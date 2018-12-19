@@ -111,6 +111,8 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
             String hash = FileUtil.sha256Hex(fileTemp);
             storeFileInfo(uuid, fileMsg.getFilename(), hash);
             storeFileData(fileTemp, hash);
+            log.debug(fileMsg.toString());
+            log.debug(hash);
         }
     }
 

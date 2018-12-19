@@ -14,11 +14,10 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.slf4j.Slf4j;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.RandomAccessFile;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+
+import java.io.*;
+import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.UUID;
 
 @Slf4j
@@ -42,9 +41,11 @@ public class Client {
 
             Channel ch = b.connect(HOST, PORT).sync().channel();
 
+            Boolean postedMsg;
             ChannelFuture lastWriteFuture = null;
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-            for (;;) {
+            for (; ; ) {
+                postedMsg = false;
                 String line = in.readLine();
                 if (line == null) break;
 
@@ -59,25 +60,54 @@ public class Client {
                     msg = new FileRequest(0, line.substring("hash:".length()).trim(), "new file");
                 else if (line.startsWith("post:")) {
                     Path path = Paths.get("client_storage/" + line.substring("post:".length()).trim());
-//                    log.debug(path.getFileName().toString());
-//                    log.debug(path.toAbsolutePath().toString());
 
                     UUID uuid = UUID.randomUUID();
+
                     MainHandler.uploadFiles.put(uuid.toString().replace("-", ""), path.toFile());
+
                     FileMessage fileMsg = new FileMessage(8 * 1024);
                     fileMsg.setUuid(uuid.toString().replace("-", ""));
                     fileMsg.setFilename(path.getFileName().toString());
+
                     try (RandomAccessFile file = new RandomAccessFile(path.toFile(), "r")) {
                         fileMsg.setLength(file.length());
                     }
                     msg = fileMsg;
+                } else if (line.startsWith("dir:")) {
+                    postedMsg = true;
+                    Path path = Paths.get(line.substring("dir:".length()).trim());
+                    Files.walkFileTree(path, new FileVisitor<Path>() {
+                        @Override
+                        public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                            log.debug(file.toString());
+                            postFileMsg(ch, file.toFile());
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
+                            return FileVisitResult.CONTINUE;
+                        }
+
+                        @Override
+                        public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                            return FileVisitResult.CONTINUE;
+                        }
+                    });
                 }
 
-                if (msg == null) msg = line;
+                if (!postedMsg) {
+                    if (msg == null) msg = line;
+                    lastWriteFuture = ch.writeAndFlush(msg);
+                }
 
-                lastWriteFuture = ch.writeAndFlush(msg);
-
-                if (!(ch.isOpen() && ch.isActive())) System.err.println("ch.isOpen(): " + ch.isOpen() + ", ch.isActive(): " + ch.isActive());
+                if (!(ch.isOpen() && ch.isActive()))
+                    System.err.println("ch.isOpen(): " + ch.isOpen() + ", ch.isActive(): " + ch.isActive());
 
                 if ("bye".equals(line.toLowerCase())) {
                     ch.closeFuture().sync();
@@ -92,5 +122,23 @@ public class Client {
             group.shutdownGracefully();
         }
     }
+
+    private static void postFileMsg(Channel ch, File file) throws IOException {
+        UUID uuid = UUID.randomUUID();
+
+        MainHandler.uploadFiles.put(uuid.toString().replace("-", ""), file);
+
+        FileMessage fileMsg = new FileMessage(8 * 1024);
+        fileMsg.setUuid(uuid.toString().replace("-", ""));
+        fileMsg.setFilename(file.getName());
+
+        try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
+            fileMsg.setLength(raf.length());
+        }
+
+        // todo Сделать проверку результата, если ошибка оьтправки, то пожождать некоторое время и попробовать еще раз
+        ch.writeAndFlush(fileMsg);
+    }
+
 }
 

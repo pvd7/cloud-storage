@@ -51,8 +51,18 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
 
     private void fileRequest(ChannelHandlerContext ctx, FileRequest msg) throws IOException {
         File file = uploadFiles.get(msg.getUuid());
-        fileMsg.setFilename(file.getName());
-        fileMsg.channelWrite(ctx, file, msg);
+        if (file != null) {
+            fileMsg.setFilename(file.getName());
+            fileMsg.channelWrite(ctx, file, msg);
+
+            if (!fileMsg.hasNextData()) {
+                uploadFiles.remove(msg.getUuid());
+                log.debug("sent last part of file ({}): {}", uploadFiles.size(), file);
+            }
+        } else {
+            log.error("requested file was not found in the queue ({}): {}", uploadFiles.size(), msg);
+            System.out.printf("");
+        }
     }
 
     private void unauthorizedResponse(UnauthorizedResponse msg) {
