@@ -19,6 +19,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.UUID;
+import java.util.function.BiConsumer;
 
 @Slf4j
 public class Client {
@@ -99,6 +100,8 @@ public class Client {
                             return FileVisitResult.CONTINUE;
                         }
                     });
+                    log.debug(String.valueOf(MainHandler.uploadFiles.size()));
+                    MainHandler.uploadFiles.forEach((s, file) -> System.out.println(file));
                 }
 
                 if (!postedMsg) {
@@ -124,9 +127,15 @@ public class Client {
     }
 
     private static void postFileMsg(Channel ch, File file) throws IOException {
-        UUID uuid = UUID.randomUUID();
+        while (MainHandler.uploadFiles.size() > 10) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
-        MainHandler.uploadFiles.put(uuid.toString().replace("-", ""), file);
+        UUID uuid = UUID.randomUUID();
 
         FileMessage fileMsg = new FileMessage(8 * 1024);
         fileMsg.setUuid(uuid.toString().replace("-", ""));
@@ -136,8 +145,19 @@ public class Client {
             fileMsg.setLength(raf.length());
         }
 
-        // todo Сделать проверку результата, если ошибка оьтправки, то пожождать некоторое время и попробовать еще раз
+        if (fileMsg.getLength() > 0)
+            MainHandler.uploadFiles.put(uuid.toString().replace("-", ""), file);
+
         ch.writeAndFlush(fileMsg);
+//        ChannelFuture future = ch.writeAndFlush(fileMsg);
+//        try {
+//            while (!future.isSuccess()) {
+//                System.err.println("Sleep: 5");
+//                Thread.sleep(5);
+//            }
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
 }

@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 public class MainHandler extends ChannelInboundHandlerAdapter {
@@ -30,7 +31,7 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
     // сообщение с частью данных файла
     private FileMessage fileMsg = new FileMessage(MAX_CHUNK_SIZE);
 
-    public static final Map<String, File> uploadFiles = new HashMap<>();
+    public static final Map<String, File> uploadFiles = new ConcurrentHashMap<>();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -51,17 +52,17 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
 
     private void fileRequest(ChannelHandlerContext ctx, FileRequest msg) throws IOException {
         File file = uploadFiles.get(msg.getUuid());
+        int size = uploadFiles.size();
         if (file != null) {
             fileMsg.setFilename(file.getName());
             fileMsg.channelWrite(ctx, file, msg);
 
             if (!fileMsg.hasNextData()) {
                 uploadFiles.remove(msg.getUuid());
-                log.debug("sent last part of file ({}): {}", uploadFiles.size(), file);
+                log.debug("sent last part of file ({}): {}, {}", size, file, msg);
             }
         } else {
-            log.error("requested file was not found in the queue ({}): {}", uploadFiles.size(), msg);
-            System.out.printf("");
+            log.error("requested file was not found in the queue ({}): {}", size, msg);
         }
     }
 
