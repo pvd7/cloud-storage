@@ -21,6 +21,7 @@ public class FileMessage extends AbstractMessage {
     private String uuid;   // uuid файла
     private String hash; // hash файла
     private String filename; // имя файла
+    private String description; // описание файла
     private long length; // размер файла
     private long offset; // смещение в файле
     private int read;    // сколько байт передаем

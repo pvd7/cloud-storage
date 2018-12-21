@@ -89,9 +89,10 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
         if (StringUtil.isEmpty(fileRequest.getHash())) {
             Path file = findFileInPaths(fileRequest.getUuid() + FILE_INFO_EXTENSION, STORAGE_INFO);
             try (InputStreamReader stream = new InputStreamReader(new FileInputStream(file.toFile()), StandardCharsets.UTF_8)) {
-                this.info.load(stream);
-                fileMsg.setFilename(this.info.getProperty("filename", "unknown"));
-                fileMsg.setHash(this.info.getProperty("hash"));
+                info.load(stream);
+                fileMsg.setFilename(info.getProperty("filename", "unknown"));
+                fileMsg.setHash(info.getProperty("hash"));
+                fileMsg.setDescription(info.getProperty("description"));
             }
         } else
             fileMsg.setHash(fileRequest.getHash());
@@ -109,14 +110,14 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
         if (!fileMsg.hasNextData()) {
             String uuid = fileMsg.getUuid();
             String hash = FileUtil.sha256Hex(fileTemp);
-            storeFileInfo(uuid, fileMsg.getFilename(), hash);
+            storeFileInfo(uuid, fileMsg.getFilename(), fileMsg.getDescription(), hash);
             storeFileData(fileTemp, hash);
             log.debug(fileMsg.toString());
             log.debug(hash);
         }
     }
 
-    private static void storeFileInfo(String uuid, String filename, String hash) throws IOException {
+    private static void storeFileInfo(String uuid, String filename, String description, String hash) throws IOException {
         Path path = CURRENT_INFO.resolve(getPathForStorage(uuid));
         Path file = Files.createDirectories(path)
                 .resolve(uuid + FILE_INFO_EXTENSION);
@@ -124,7 +125,8 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
             Properties prop = new Properties();
             prop.setProperty("filename", filename);
             prop.setProperty("hash", hash);
-            prop.store(stream, "file description");
+            prop.setProperty("description", description == null ? "" : description);
+            prop.store(stream, "description of file in repository");
         }
     }
 

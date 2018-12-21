@@ -55,6 +55,8 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
         int size = uploadFiles.size();
         if (file != null) {
             fileMsg.setFilename(file.getName());
+            if (!fileMsg.hasNextData())
+                fileMsg.setDescription(file.toString());
             fileMsg.channelWrite(ctx, file, msg);
 
             if (!fileMsg.hasNextData()) {

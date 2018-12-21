@@ -147,17 +147,10 @@ public class Client {
 
         if (fileMsg.getLength() > 0)
             MainHandler.uploadFiles.put(uuid.toString().replace("-", ""), file);
+        else
+            fileMsg.setDescription(file.toString());
 
         ch.writeAndFlush(fileMsg);
-//        ChannelFuture future = ch.writeAndFlush(fileMsg);
-//        try {
-//            while (!future.isSuccess()) {
-//                System.err.println("Sleep: 5");
-//                Thread.sleep(5);
-//            }
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
     }
 
 }
