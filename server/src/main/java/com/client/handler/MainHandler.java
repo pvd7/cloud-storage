@@ -35,8 +35,8 @@ public class MainHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        if (msg == null) return;
         try {
-            if (msg == null) return;
             if (msg instanceof AuthorizedResponse) authorizedResponse((AuthorizedResponse) msg);
             else if (msg instanceof UnauthorizedResponse) unauthorizedResponse((UnauthorizedResponse) msg);
             else if (msg instanceof FileRequest) fileRequest(ctx, (FileRequest) msg);
